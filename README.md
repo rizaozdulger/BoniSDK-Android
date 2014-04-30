@@ -25,7 +25,7 @@ Add following codes to your onCreate method.
         boniBeaconManager = new BoniBeaconManager(context, new BoniBeaconListener() {
             @Override
             public void onNearestRangedBeacon(BoniBeacon boniBeacon) {
-                //neares beacon in region
+                //nearest beacon in region
             }
 
             @Override
