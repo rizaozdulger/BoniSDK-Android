@@ -1,17 +1,12 @@
-package me.boni.example;
+package me.boni.sdk.example;
 
 import android.app.Activity;
-import android.app.ActionBar;
-import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -22,14 +17,15 @@ import java.util.List;
 import me.boni.sdk.BoniBeaconListener;
 import me.boni.sdk.BoniBeaconManager;
 import me.boni.sdk.entities.BoniBeacon;
+import me.boni.sdk.entities.BoniRegion;
 
 public class MainActivity extends Activity {
 
-    private static final String BONI_UUID = "YOUR-BONI-BEACON_UUID";
+    private static final String BONI_UUID = "538C5AB24DBA43BA53BE4EB041AD41B0";
 
     Context context;
-    BoniBeaconManager boniBeaconManager;
     BeaconListAdapter adapter;
+    BoniRegion region;
     List<BoniBeacon> beacons = new ArrayList<BoniBeacon>();
 
     @Override
@@ -43,19 +39,20 @@ public class MainActivity extends Activity {
         adapter = new BeaconListAdapter(context, beacons);
         listView.setAdapter(adapter);
 
-        boniBeaconManager = new BoniBeaconManager(context, new BoniBeaconListener() {
+        region = new BoniRegion("test", BONI_UUID, null, null);
+        BoniBeaconManager.getInstance(context).registerRangingListener(new BoniBeaconListener() {
             @Override
-            public void onNearestRangedBeacon(BoniBeacon boniBeacon) {
+            public void onNearestRangedBeacon(BoniRegion boniRegion, BoniBeacon boniBeacon) {
 
             }
 
             @Override
-            public void onRangedBeacons(final List<BoniBeacon> boniBeacons) {
-                beacons.clear();
-                beacons.addAll(boniBeacons);
+            public void onRangedBeacons(BoniRegion boniRegion, final List<BoniBeacon> boniBeacons) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        beacons.clear();
+                        beacons.addAll(boniBeacons);
                         adapter.notifyDataSetChanged();
                     }
                 });
@@ -67,13 +64,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        boniBeaconManager.startRanging(BONI_UUID);
+        if (region != null) {
+            BoniBeaconManager.getInstance(context).startRangingBeacons(region);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        boniBeaconManager.stopRanging();
+        if (region != null) {
+            BoniBeaconManager.getInstance(context).stopRangingBeacons(region);
+        }
     }
 
     private class BeaconListAdapter extends ArrayAdapter<BoniBeacon> {
@@ -102,10 +103,9 @@ public class MainActivity extends Activity {
             tvName.setText(boniBeacon.getDeviceName());
             tvMajor.setText(boniBeacon.getMajor());
             tvMinor.setText(boniBeacon.getMinor());
-            tvRssi.setText(Integer.toString(boniBeacon.getRssi()));
+            tvRssi.setText(String.valueOf(boniBeacon.getRssi()));
 
             return view;
         }
     }
-
 }
